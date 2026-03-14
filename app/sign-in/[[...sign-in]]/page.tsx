@@ -38,6 +38,11 @@ export default function SignInPage() {
     setError('');
 
     try {
+      // ✅ Vérifier que Firebase est initialisé
+      if (!db) {
+        throw new Error("Firebase Firestore n'est pas initialisé");
+      }
+
       console.log("🔑 Tentative de connexion pour:", email, "rôle sélectionné:", role);
       
       // 1. Connexion avec Firebase
@@ -96,6 +101,8 @@ export default function SignInPage() {
         errorMessage = 'Format d\'email invalide';
       } else if (err.code === 'auth/too-many-requests') {
         errorMessage = 'Trop de tentatives. Réessayez plus tard.';
+      } else if (err.message === "Firebase Firestore n'est pas initialisé") {
+        errorMessage = 'Service temporairement indisponible';
       }
       
       setError(errorMessage);

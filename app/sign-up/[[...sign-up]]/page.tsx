@@ -60,6 +60,11 @@ export default function SignUpPage() {
     setIsLoading(true);
 
     try {
+      // ✅ Vérifier que Firebase est initialisé
+      if (!db) {
+        throw new Error("Firebase Firestore n'est pas initialisé");
+      }
+
       // 1. Créer l'utilisateur dans Firebase Auth
       console.log("Création utilisateur Firebase...");
       const userCredential = await firebaseSignUp(formData.email, formData.password);
@@ -115,14 +120,15 @@ export default function SignUpPage() {
         errorMsg = "Le mot de passe doit contenir au moins 6 caractères.";
       } else if (err.code === 'auth/invalid-email') {
         errorMsg = "L'adresse email n'est pas valide.";
+      } else if (err.message === "Firebase Firestore n'est pas initialisé") {
+        errorMsg = "Service temporairement indisponible";
       }
 
       toast.error(errorMsg);
       setIsLoading(false);
-      setIsRedirecting(false); // ← Désactiver en cas d'erreur
+      setIsRedirecting(false);
     }
   };
-
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
       <div className="max-w-xl w-full space-y-8 bg-white p-8 rounded-2xl shadow-sm border border-slate-100">

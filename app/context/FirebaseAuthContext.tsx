@@ -13,7 +13,7 @@ import {
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/app/lib/firebase';
 import { useAppContext } from './AppContext';
-import { User } from '@/app/types'; // ← Import du type User de ton app
+import { User } from '@/app/types'; 
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -40,7 +40,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
     const cachedUser = sessionStorage.getItem('firebase_user');
     if (cachedUser && !initDone.current) {
       try {
-        const userData: User = JSON.parse(cachedUser); // ← Typer comme User
+        const userData: User = JSON.parse(cachedUser);
         console.log("📦 Utilisateur chargé depuis session:", userData.email);
         setAppUser(userData);
         setLoading(false);

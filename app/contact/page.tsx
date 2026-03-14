@@ -3,10 +3,9 @@
 
 import React from 'react';
 import { Mail, Phone, MapPin } from 'lucide-react';
-import { Button } from '../components/ui/Button';  // ← Changé: @/ au lieu de ../
-import { Input } from '../components/ui/Input';    // ← Changé: @/ au lieu de ../
-
-export default function ContactPage() {  // ← Changé: export default function
+import { Input } from '../components/ui/Input';    
+import { Button } from '../components/ui/Button';
+export default function ContactPage() { 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto space-y-8">

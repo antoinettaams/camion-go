@@ -1,9 +1,13 @@
-"use client";
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+// src/context/AppContext.tsx
+'use client';
+
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Mission, Quote, Rating, MissionStatus } from '../types';
 
 interface AppContextType {
   user: User | null;
+  setUser: (user: User | null) => void;
+  appLoading: boolean; // ← AJOUTÉ
   login: (email: string, role?: string) => boolean;
   logout: () => void;
   register: (user: User) => void;
@@ -47,20 +51,25 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [appLoading, setAppLoading] = useState(true); // ← AJOUTÉ
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [missions, setMissions] = useState<Mission[]>(mockMissions);
   const [quotes, setQuotes] = useState<Quote[]>(mockQuotes);
   const [ratings, setRatings] = useState<Rating[]>([]);
+
+  // ✅ Quand l'utilisateur change, on arrête le chargement
+  useEffect(() => {
+    console.log("📊 AppContext - user changé:", user?.email);
+    setAppLoading(false);
+  }, [user]);
 
   const login = (email: string, role?: string) => {
     const foundUser = users.find(u => u.email === email && (!role || u.role === role));
     if (foundUser) {
       setUser(foundUser);
       return true;
-    } else {
-      alert("Identifiants incorrects pour ce type de compte. Vérifiez l'email et le type de compte sélectionné.");
-      return false;
     }
+    return false;
   };
 
   const logout = () => setUser(null);
@@ -139,9 +148,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider value={{
-      user, login, logout, register,
-      users, missions, quotes, ratings,
-      addMission, addQuote, acceptQuote, updateMissionStatus, deleteMission, addRating
+      user,
+      setUser,
+      appLoading, // ← AJOUTÉ
+      login,
+      logout,
+      register,
+      users,
+      missions,
+      quotes,
+      ratings,
+      addMission,
+      addQuote,
+      acceptQuote,
+      updateMissionStatus,
+      deleteMission,
+      addRating
     }}>
       {children}
     </AppContext.Provider>

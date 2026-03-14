@@ -24,12 +24,12 @@ export function Landing() {
                 La plateforme numéro 1 au Bénin qui connecte instantanément expéditeurs et transporteurs professionnels.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/register?role=entreprise" className="w-full sm:w-auto">  {/* ← href au lieu de to */}
+                <Link href="/sign-up?role=entreprise" className="w-full sm:w-auto">  {/* ← href au lieu de to */}
                   <Button size="lg" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg h-14 px-8 rounded-lg">
                     Réserver un transport
                   </Button>
                 </Link>
-                <Link href="/register?role=chauffeur" className="w-full sm:w-auto">  {/* ← href au lieu de to */}
+                <Link href="/sign-up?role=chauffeur" className="w-full sm:w-auto">  {/* ← href au lieu de to */}
                   <Button size="lg" variant="outline" className="w-full bg-transparent border-2 border-slate-700 text-white hover:bg-slate-800 hover:text-white hover:border-slate-600 font-semibold text-lg h-14 px-8 rounded-lg">
                     Devenir conducteur CamionGo
                   </Button>

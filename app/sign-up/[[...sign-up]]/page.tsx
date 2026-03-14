@@ -2,25 +2,31 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';  // ← Changé: useRouter
-import Link from 'next/link';  // ← Changé: Link de next/link
-import { useSearchParams } from 'next/navigation';  // ← Changé: useSearchParams de next/navigation
-import { Truck, Building2 } from 'lucide-react';
-import { Button } from '@/app/components/ui/Button';  // ← Chemin absolu
-import { Input } from '@/app/components/ui/Input';    // ← Chemin absolu
-import { Select } from '@/app/components/ui/Select';  // ← Chemin absolu
-import { useAppContext } from '@/app/context/AppContext';  // ← Chemin absolu
-import { Role, User } from '@/app/types';  // ← Chemin absolu
-import { cn } from '@/app/lib/utils';  // ← Chemin absolu
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { Truck, Building2, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { Button } from '@/app/components/ui/Button';
+import { Input } from '@/app/components/ui/Input';
+import { Select } from '@/app/components/ui/Select';
+import { useAppContext } from '@/app/context/AppContext';
+import { useFirebaseAuth } from '@/app/context/FirebaseAuthContext';
+import { Role, User } from '@/app/types';
+import { cn } from '@/app/lib/utils';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '@/app/lib/firebase';
 
 const CITIES = ['Cotonou', 'Porto-Novo', 'Abomey-Calavi', 'Parakou', 'Bohicon', 'Natitingou', 'Lokossa', 'Ouidah', 'Kandi', 'Djougou'];
 const TRUCK_TYPES = ['Camionnette', 'Camion bâché', 'Camion frigorifique', 'Camion plateau', 'Semi-remorque'];
 
-export default function SignUpPage() {  // ← Changé: export default
-  const searchParams = useSearchParams();  // ← Changé: plus de crochets
+export default function SignUpPage() {
+  const searchParams = useSearchParams();
   const defaultRole = (searchParams.get('role') as Role) || 'entreprise';
   
   const [role, setRole] = useState<Role>(defaultRole);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -32,35 +38,89 @@ export default function SignUpPage() {  // ← Changé: export default
     zone: CITIES[0]
   });
 
-  const { register, user } = useAppContext();
-  const router = useRouter();  // ← Changé: useRouter
+  const { register: registerInApp } = useAppContext();
+  const { signUp: firebaseSignUp, user: firebaseUser } = useFirebaseAuth();
+  const router = useRouter();
 
+  // 📍 LOG 1: Surveillance de firebaseUser
   useEffect(() => {
-    if (user) {
-      router.push(user.role === 'entreprise' ? '/entreprise' : '/chauffeur');  // ← Changé: router.push
-    }
-  }, [user, router]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    console.log("useEffect - firebaseUser:", firebaseUser?.email, "isRedirecting:", isRedirecting);
     
-    const newUser: User = {
-      id: `u${Date.now()}`,
-      role,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      ...(role === 'entreprise' ? { companyName: formData.companyName } : {}),
-      ...(role === 'chauffeur' ? { 
-        truckType: formData.truckType, 
-        capacity: Number(formData.capacity), 
-        zone: formData.zone,
-        rating: 5.0
-      } : {})
-    };
+    if (firebaseUser && isRedirecting) {
+      const destination = role === 'entreprise' ? '/dashboard/entreprise' : '/dashboard/chauffeur';
+      console.log("🚀 REDIRECTION VERS:", destination);
+      router.push(destination);
+    }
+  }, [firebaseUser, router, role, isRedirecting]);
 
-    register(newUser);
-    router.push(role === 'entreprise' ? '/entreprise' : '/chauffeur');  // ← Changé: router.push
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("🟢 Formulaire soumis");
+    
+    setIsLoading(true);
+
+    try {
+      // 1. Créer l'utilisateur dans Firebase Auth
+      console.log("Création utilisateur Firebase...");
+      const userCredential = await firebaseSignUp(formData.email, formData.password);
+      console.log("✅ Utilisateur Firebase créé:", userCredential.uid);
+      
+      // ✅ SOLUTION: Activer isRedirecting IMMÉDIATEMENT après création Firebase
+      console.log("🟡 Activation de isRedirecting = true");
+      setIsRedirecting(true);
+      
+      // 2. Préparer l'objet utilisateur
+      const newUser: User = {
+        id: userCredential.uid,
+        role,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        ...(role === 'entreprise' ? { companyName: formData.companyName } : {}),
+        ...(role === 'chauffeur' ? { 
+          truckType: formData.truckType, 
+          capacity: Number(formData.capacity), 
+          zone: formData.zone,
+          rating: 5.0
+        } : {})
+      };
+
+      // 3. Sauvegarder dans Firestore (en arrière-plan)
+      console.log("Sauvegarde Firestore...");
+      await setDoc(doc(db, 'users', userCredential.uid), newUser);
+      console.log("✅ Utilisateur sauvegardé dans Firestore");
+      
+      // 4. Enregistrer dans le contexte local
+      registerInApp(newUser);
+      console.log("✅ Utilisateur enregistré dans le contexte");
+      
+      // 5. Message de succès
+      const welcomeMsg = role === 'entreprise' 
+        ? `Bienvenue, l'entreprise ${formData.companyName} est prête !` 
+        : `Route libre ! Bienvenue à bord, ${formData.name.split(' ')[0]}.`;
+      
+      toast.success(welcomeMsg, {
+        duration: 3000,
+        icon: role === 'entreprise' ? '🏢' : '🚛',
+      });
+      
+    } catch (err: any) {
+      console.error('❌ Erreur inscription:', err);
+      
+      let errorMsg = "Impossible de créer le compte.";
+      
+      if (err.code === 'auth/email-already-in-use') {
+        errorMsg = "Cet email est déjà utilisé par un autre compte.";
+      } else if (err.code === 'auth/weak-password') {
+        errorMsg = "Le mot de passe doit contenir au moins 6 caractères.";
+      } else if (err.code === 'auth/invalid-email') {
+        errorMsg = "L'adresse email n'est pas valide.";
+      }
+
+      toast.error(errorMsg);
+      setIsLoading(false);
+      setIsRedirecting(false); // ← Désactiver en cas d'erreur
+    }
   };
 
   return (
@@ -70,7 +130,7 @@ export default function SignUpPage() {  // ← Changé: export default
           <h2 className="text-3xl font-bold text-slate-900">Créer un compte</h2>
           <p className="mt-2 text-sm text-slate-600">
             Déjà inscrit ?{' '}
-            <Link href="/sign-in" className="font-medium text-blue-700 hover:text-blue-600">  {/* ← href */}
+            <Link href="/sign-in" className="font-medium text-blue-700 hover:text-blue-600">
               Connectez-vous
             </Link>
           </p>
@@ -105,28 +165,60 @@ export default function SignUpPage() {  // ← Changé: export default
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-slate-700 mb-1">Nom complet</label>
-              <Input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Jean Dupont" />
+              <Input 
+                required 
+                value={formData.name} 
+                onChange={e => setFormData({...formData, name: e.target.value})} 
+                placeholder="Jean Dupont"
+                disabled={isLoading || isRedirecting}
+              />
             </div>
             
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-              <Input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="jean@exemple.com" />
+              <Input 
+                type="email" 
+                required 
+                value={formData.email} 
+                onChange={e => setFormData({...formData, email: e.target.value})} 
+                placeholder="jean@exemple.com"
+                disabled={isLoading || isRedirecting}
+              />
             </div>
             
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Téléphone</label>
-              <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+229 90000000" />
+              <Input 
+                required 
+                value={formData.phone} 
+                onChange={e => setFormData({...formData, phone: e.target.value})} 
+                placeholder="+229 90000000"
+                disabled={isLoading || isRedirecting}
+              />
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-slate-700 mb-1">Mot de passe</label>
-              <Input type="password" required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} placeholder="••••••••" />
+              <Input 
+                type="password" 
+                required 
+                value={formData.password} 
+                onChange={e => setFormData({...formData, password: e.target.value})} 
+                placeholder="••••••••"
+                disabled={isLoading || isRedirecting}
+              />
             </div>
 
             {role === 'entreprise' && (
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-slate-700 mb-1">Nom de l'entreprise</label>
-                <Input required value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} placeholder="Ma Société SARL" />
+                <Input 
+                  required 
+                  value={formData.companyName} 
+                  onChange={e => setFormData({...formData, companyName: e.target.value})} 
+                  placeholder="Ma Société SARL"
+                  disabled={isLoading || isRedirecting}
+                />
               </div>
             )}
 
@@ -134,17 +226,32 @@ export default function SignUpPage() {  // ← Changé: export default
               <>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-slate-700 mb-1">Type de camion</label>
-                  <Select value={formData.truckType} onChange={e => setFormData({...formData, truckType: e.target.value})}>
+                  <Select 
+                    value={formData.truckType} 
+                    onChange={e => setFormData({...formData, truckType: e.target.value})}
+                    disabled={isLoading || isRedirecting}
+                  >
                     {TRUCK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </Select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Capacité (Tonnes)</label>
-                  <Input type="number" min="1" required value={formData.capacity} onChange={e => setFormData({...formData, capacity: e.target.value})} />
+                  <Input 
+                    type="number" 
+                    min="1" 
+                    required 
+                    value={formData.capacity} 
+                    onChange={e => setFormData({...formData, capacity: e.target.value})}
+                    disabled={isLoading || isRedirecting}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Zone principale</label>
-                  <Select value={formData.zone} onChange={e => setFormData({...formData, zone: e.target.value})}>
+                  <Select 
+                    value={formData.zone} 
+                    onChange={e => setFormData({...formData, zone: e.target.value})}
+                    disabled={isLoading || isRedirecting}
+                  >
                     {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </Select>
                 </div>
@@ -152,8 +259,25 @@ export default function SignUpPage() {  // ← Changé: export default
             )}
           </div>
 
-          <Button type="submit" className={cn("w-full", role === 'chauffeur' ? "bg-blue-500 hover:bg-blue-600" : "")} size="lg">
-            Créer mon compte
+          <Button 
+            type="submit" 
+            className={cn("w-full", role === 'chauffeur' ? "bg-blue-500 hover:bg-blue-600" : "bg-blue-700 hover:bg-blue-800")} 
+            size="lg"
+            disabled={isLoading || isRedirecting}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Création en cours...
+              </>
+            ) : isRedirecting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Redirection...
+              </>
+            ) : (
+              'Créer mon compte'
+            )}
           </Button>
         </form>
       </div>

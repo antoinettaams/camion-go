@@ -2,34 +2,106 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';  // ← Changé: useRouter
-import Link from 'next/link';  // ← Changé: Link de next/link
-import { Truck, Building2 } from 'lucide-react';
-import { Button } from '@/app/components/ui/Button';  // ← Changé: chemin absolu
-import { Input } from '@/app/components/ui/Input';   // ← Changé: chemin absolu
-import { useAppContext } from '@/app/context/AppContext';  // ← Changé: chemin absolu
-import { cn } from '@/app/lib/utils';// ← Changé: chemin absolu
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Truck, Building2, Loader2 } from 'lucide-react';
+import { Button } from '@/app/components/ui/Button';
+import { Input } from '@/app/components/ui/Input';
+import { useAppContext } from '@/app/context/AppContext';
+import { useFirebaseAuth } from '@/app/context/FirebaseAuthContext';
+import { cn } from '@/app/lib/utils';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/app/lib/firebase';
+import toast from 'react-hot-toast';
 
-export default function SignInPage() {  // ← Changé: export default
+export default function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'entreprise' | 'chauffeur'>('entreprise');
-  const { login, user } = useAppContext();
-  const router = useRouter();  // ← Changé: useRouter
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  const { signIn } = useFirebaseAuth();
+  const { user: appUser, login } = useAppContext();
+  const router = useRouter();
 
   useEffect(() => {
-    if (user) {
-      router.push(user.role === 'entreprise' ? '/entreprise' : '/chauffeur');  // ← Changé: router.push
+    if (appUser) {
+      console.log("🔄 Utilisateur déjà connecté, redirection vers:", appUser.role);
+      router.push(appUser.role === 'entreprise' ? '/dashboard/entreprise' : '/dashboard/chauffeur');
     }
-  }, [user, router]);
+  }, [appUser, router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(email, role);
-    if (success) {
-      setTimeout(() => {
-        router.push('/dashboard-redirect');  // ← Changé: router.push
-      }, 100);
+    setIsLoading(true);
+    setError('');
+
+    try {
+      console.log("🔑 Tentative de connexion pour:", email, "rôle sélectionné:", role);
+      
+      // 1. Connexion avec Firebase
+      const userCredential = await signIn(email, password);
+      console.log("✅ Firebase Auth réussi pour UID:", userCredential.uid);
+      
+      // 2. Récupérer les infos supplémentaires depuis Firestore
+      console.log("📦 Chargement document Firestore pour:", userCredential.uid);
+      const userDoc = await getDoc(doc(db, 'users', userCredential.uid));
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        console.log("✅ Données Firestore récupérées:", userData);
+        console.log("Rôle dans Firestore:", userData.role, "Rôle sélectionné:", role);
+        
+        // 3. Vérifier le rôle
+        if (userData.role !== role) {
+          const errorMsg = `Ce compte est un compte ${userData.role}, pas un compte ${role}`;
+          console.error("❌", errorMsg);
+          setError(errorMsg);
+          toast.error(errorMsg);
+          setIsLoading(false);
+          return;
+        }
+        
+        // 4. Connecter dans le contexte local
+        console.log("✅ Rôle OK, connexion dans AppContext");
+        login(email, role);
+        
+        // 5. Message de succès
+        toast.success('✅ Connexion réussie !', {
+          duration: 2000,
+          icon: '🎉',
+        });
+        
+        // 6. Rediriger
+        const destination = role === 'entreprise' ? '/dashboard/entreprise' : '/dashboard/chauffeur';
+        console.log("🚀 Redirection vers:", destination);
+        router.push(destination);
+      } else {
+        console.error("❌ Document Firestore non trouvé pour UID:", userCredential.uid);
+        setError('Utilisateur non trouvé dans la base de données');
+        toast.error('❌ Utilisateur non trouvé');
+      }
+      
+    } catch (err: any) {
+      console.error('❌ Erreur connexion:', err);
+      
+      let errorMessage = 'Email ou mot de passe incorrect';
+      
+      if (err.code === 'auth/user-not-found') {
+        errorMessage = 'Aucun compte trouvé avec cet email';
+      } else if (err.code === 'auth/wrong-password') {
+        errorMessage = 'Mot de passe incorrect';
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = 'Format d\'email invalide';
+      } else if (err.code === 'auth/too-many-requests') {
+        errorMessage = 'Trop de tentatives. Réessayez plus tard.';
+      }
+      
+      setError(errorMessage);
+      toast.error(`❌ ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -41,16 +113,25 @@ export default function SignInPage() {  // ← Changé: export default
           <h2 className="mt-6 text-3xl font-bold text-slate-900">Connexion</h2>
           <p className="mt-2 text-sm text-slate-600">
             Ou{' '}
-            <Link href="/sign-up" className="font-medium text-blue-700 hover:text-blue-600">  {/* ← href */}
+            <Link href="/sign-up" className="font-medium text-blue-700 hover:text-blue-600">
               créez un compte gratuitement
             </Link>
           </p>
         </div>
         
+        {error && (
+          <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm">
+            {error}
+          </div>
+        )}
+        
         <div className="flex p-1 bg-slate-100 rounded-lg mb-6">
           <button
             type="button"
-            onClick={() => setRole('entreprise')}
+            onClick={() => {
+              console.log("🎯 Changement de rôle vers:", role === 'entreprise' ? 'chauffeur' : 'entreprise');
+              setRole(role === 'entreprise' ? 'chauffeur' : 'entreprise');
+            }}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-md transition-all",
               role === 'entreprise' ? "bg-white text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"
@@ -61,7 +142,10 @@ export default function SignInPage() {  // ← Changé: export default
           </button>
           <button
             type="button"
-            onClick={() => setRole('chauffeur')}
+            onClick={() => {
+              console.log("🎯 Changement de rôle vers:", role === 'chauffeur' ? 'entreprise' : 'chauffeur');
+              setRole(role === 'chauffeur' ? 'entreprise' : 'chauffeur');
+            }}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-md transition-all",
               role === 'chauffeur' ? "bg-white text-blue-500 shadow-sm" : "text-slate-600 hover:text-slate-900"
@@ -72,18 +156,6 @@ export default function SignInPage() {  // ← Changé: export default
           </button>
         </div>
 
-        <div className="bg-blue-50 p-4 rounded-md text-sm text-blue-800 mb-6">
-          <p className="font-semibold mb-1">Compte de démo ({role === 'entreprise' ? 'Entreprise' : 'Chauffeur'}) :</p>
-          <ul className="list-disc pl-5 space-y-1">
-            {role === 'entreprise' ? (
-              <li>Email: <strong>contact@pharma.bj</strong></li>
-            ) : (
-              <li>Email: <strong>koffi@camion.bj</strong></li>
-            )}
-            <li>Mot de passe: (n'importe quoi)</li>
-          </ul>
-        </div>
-
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
@@ -92,26 +164,62 @@ export default function SignInPage() {  // ← Changé: export default
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  console.log("📝 Email:", e.target.value);
+                  setEmail(e.target.value);
+                }}
                 placeholder="exemple@email.com"
+                disabled={isLoading}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Mot de passe</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-slate-700">
+                  Mot de passe
+                </label>
+                <Link 
+                  href="/forgot-password" 
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  Mot de passe oublié ?
+                </Link>
+              </div>
               <Input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                disabled={isLoading}
               />
             </div>
           </div>
-
-          <Button type="submit" className={cn("w-full", role === 'chauffeur' ? "bg-blue-500 hover:bg-blue-600" : "")} size="lg">
-            Se connecter en tant que {role === 'entreprise' ? 'entreprise' : 'chauffeur'}
+          <Button 
+            type="submit" 
+            className={cn("w-full", role === 'chauffeur' ? "bg-blue-500 hover:bg-blue-600" : "bg-blue-700 hover:bg-blue-800")} 
+            size="lg"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Connexion en cours...
+              </>
+            ) : (
+              `Se connecter en tant que ${role === 'entreprise' ? 'entreprise' : 'chauffeur'}`
+            )}
           </Button>
         </form>
+
+        {/* Comptes de démo */}
+        <div className="bg-blue-50 p-4 rounded-md text-sm text-blue-800">
+          <p className="font-semibold mb-1">Compte de démo :</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Email: <strong>julie@gmail.com</strong> (entreprise)</li>
+            <li>Email: <strong>koffi@camion.bj</strong> (chauffeur)</li>
+            <li>Mot de passe: celui que tu as choisi</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

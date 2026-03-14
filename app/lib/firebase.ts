@@ -1,7 +1,7 @@
 // src/lib/firebase.ts
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,13 +12,25 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// 1. On vérifie si on a au moins l'API Key avant d'initialiser
-// Cela évite l'erreur "invalid-api-key" si le build tente d'accéder à ce fichier sans les variables env
-const app = (getApps().length > 0) 
-  ? getApp() 
-  : (firebaseConfig.apiKey ? initializeApp(firebaseConfig) : null);
+// Vérifier que toutes les variables sont présentes
+const hasValidConfig = Object.values(firebaseConfig).every(value => value !== undefined);
 
-// 2. On exporte avec des gardes-fous
-export const auth = app ? getAuth(app) : null as any;
-export const db = app ? getFirestore(app) : null as any;
-export { app };
+// Initialiser Firebase seulement si la config est valide
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+
+if (hasValidConfig) {
+  try {
+    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    console.log("✅ Firebase initialisé avec succès");
+  } catch (error) {
+    console.error("❌ Erreur initialisation Firebase:", error);
+  }
+} else {
+  console.warn("⚠️ Firebase non initialisé - variables d'environnement manquantes");
+}
+
+export { app, auth, db };

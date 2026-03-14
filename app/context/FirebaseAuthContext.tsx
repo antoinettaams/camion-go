@@ -32,8 +32,21 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   const { setUser: setAppUser } = useAppContext();
   const isMounted = useRef(true);
   const initDone = useRef(false);
+  const [firebaseReady, setFirebaseReady] = useState(false);
+
+  // ✅ Vérifier que Firebase est initialisé
+  useEffect(() => {
+    if (auth && db) {
+      setFirebaseReady(true);
+    } else {
+      console.warn("⚠️ Firebase non disponible, arrêt du provider");
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
+    if (!firebaseReady || !auth) return;
+    
     isMounted.current = true;
     
     // Vérifier si on a déjà des données en session
@@ -57,7 +70,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       console.log("🔥 Firebase Auth state changed:", firebaseUser?.email || "déconnecté");
       setUser(firebaseUser);
       
-      if (firebaseUser) {
+      if (firebaseUser && db) {
         try {
           // Si déjà initialisé depuis le cache, on ne refait pas
           if (initDone.current) {
@@ -69,16 +82,11 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           
           if (userDoc.exists() && isMounted.current) {
-            // ✅ Cast explicite vers le type User
             const userData = userDoc.data() as User;
             console.log("✅ Utilisateur chargé depuis Firestore:", userData.email);
             
-            // Stocker en session pour les prochains rechargements
             sessionStorage.setItem('firebase_user', JSON.stringify(userData));
-            
-            // Mettre à jour AppContext
             setAppUser(userData);
-            
             setLoading(false);
             initDone.current = true;
           } else if (isMounted.current) {
@@ -105,21 +113,24 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
       isMounted.current = false;
       unsubscribe();
     };
-  }, [setAppUser]);
+  }, [firebaseReady, setAppUser, db]);
 
   const signUp = async (email: string, password: string) => {
+    if (!auth) throw new Error("Firebase Auth non initialisé");
     console.log("📝 Création utilisateur Firebase:", email);
     const result = await createUserWithEmailAndPassword(auth, email, password);
     return result.user;
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!auth) throw new Error("Firebase Auth non initialisé");
     console.log("🔑 Connexion utilisateur:", email);
     const result = await signInWithEmailAndPassword(auth, email, password);
     return result.user;
   };
 
   const logout = async () => {
+    if (!auth) return;
     console.log("👋 Déconnexion");
     sessionStorage.removeItem('firebase_user');
     setAppUser(null);
@@ -128,6 +139,7 @@ export function FirebaseAuthProvider({ children }: { children: React.ReactNode }
   };
 
   const resetPassword = async (email: string) => {
+    if (!auth) throw new Error("Firebase Auth non initialisé");
     console.log("📧 Envoi email de réinitialisation à:", email);
     await sendPasswordResetEmail(auth, email);
   };

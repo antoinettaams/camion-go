@@ -12,8 +12,13 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
+// 1. On vérifie si on a au moins l'API Key avant d'initialiser
+// Cela évite l'erreur "invalid-api-key" si le build tente d'accéder à ce fichier sans les variables env
+const app = (getApps().length > 0) 
+  ? getApp() 
+  : (firebaseConfig.apiKey ? initializeApp(firebaseConfig) : null);
 
-export { app, auth, db };
+// 2. On exporte avec des gardes-fous
+export const auth = app ? getAuth(app) : null as any;
+export const db = app ? getFirestore(app) : null as any;
+export { app };

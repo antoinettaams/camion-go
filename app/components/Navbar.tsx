@@ -1,18 +1,18 @@
 // src/components/Navbar.tsx
 'use client';
 
-import { useState, useEffect } from 'react'; // ← Ajoute useEffect
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation'; // ← Ajoute usePathname
-import { Truck, LogOut, User as UserIcon, Menu, X, LogIn, UserPlus, CircleHelp } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
+import { Truck, LogOut, Menu, X, LogIn, UserPlus, CircleHelp } from 'lucide-react';
 import { useAppContext } from '@/app/context/AppContext';
 
 export function Navbar() {
   const { user, logout } = useAppContext();
   const router = useRouter();
-  const pathname = usePathname(); // ← Récupère le chemin actuel
+  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(true); // ← État pour contrôler la visibilité
+  const [isVisible, setIsVisible] = useState(true);
 
   // ✅ Masquer la navbar sur les pages d'authentification
   useEffect(() => {
@@ -41,36 +41,6 @@ export function Navbar() {
               <span className="font-bold text-xl text-slate-900">CamionGo</span>
             </Link>
           </div>
-
-          {/* Menu pour utilisateurs connectés */}
-          {user && (
-            <div className="hidden md:flex items-center gap-4">
-              <span className="text-sm text-slate-600">
-                Connecté en tant que <span className="font-medium text-slate-900">{user.name}</span>
-              </span>
-              {user.role === 'entreprise' ? (
-                <>
-                  <Link href="/dashboard/entreprise" className="nav-link">Dashboard</Link>
-                  <Link href="/dashboard/entreprise/nouvelle-demande" className="nav-link">Nouvelle mission</Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/dashboard/chauffeur" className="nav-link">Dashboard</Link>
-                  <Link href="/dashboard/chauffeur/mes-missions" className="nav-link">Mes missions</Link>
-                </>
-              )}
-              <Link href="/profil" className="nav-link">Profil</Link>
-              <Link href="/evaluations" className="nav-link">Évaluations</Link>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-                Déconnexion
-              </button>
-            </div>
-          )}
-
           {/* Desktop Menu - Non connecté */}
           {!user && (
             <div className="hidden md:flex items-center gap-4">
@@ -115,11 +85,11 @@ export function Navbar() {
                 <span className="text-lg font-medium">Se connecter</span>
               </Link>
               <Link href="/sign-up" onClick={closeMenu} className="flex items-center gap-4 px-6 py-4 border-b border-slate-100 text-slate-700 hover:bg-slate-50 transition-colors">
-                <UserPlus className="h-6 w-6 text-slate-600" />
+                <UserPlus className="w-6 h-6 text-slate-600" />
                 <span className="text-lg font-medium">Créer un compte</span>
               </Link>
               <Link href="/contact" onClick={closeMenu} className="flex items-center gap-4 px-6 py-4 text-slate-700 hover:bg-slate-50 transition-colors">
-                <CircleHelp className="h-6 w-6 text-slate-600" />
+                <CircleHelp className="w-6 h-6 text-slate-600" />
                 <span className="text-lg font-medium">Contact</span>
               </Link>
             </div>

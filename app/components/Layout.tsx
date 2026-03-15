@@ -12,7 +12,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const pathname = usePathname();
-  const isDashboard = pathname.startsWith('/entreprise') || pathname.startsWith('/chauffeur');
+  const isDashboard = pathname.startsWith('/dashboard/entreprise') || pathname.startsWith('/dashboard/chauffeur');
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">

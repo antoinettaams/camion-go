@@ -1,22 +1,24 @@
 // src/components/Footer.tsx
 'use client';
 
-import { useState, useEffect } from 'react'; // ← Ajoute useState et useEffect
-import { usePathname } from 'next/navigation'; // ← Ajoute usePathname
-import { Truck, Facebook, Twitter, Instagram, Linkedin, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import { Truck, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import Link from 'next/link';
 
 export function Footer() {
-  const pathname = usePathname(); // ← Récupère le chemin actuel
-  const [isVisible, setIsVisible] = useState(true); // ← État pour contrôler la visibilité
+  const pathname = usePathname();
+  const [isVisible, setIsVisible] = useState(true);
 
-  // ✅ Masquer le footer sur les pages d'authentification
+  // ✅ Masquer le footer sur les pages d'authentification et les dashboards
   useEffect(() => {
     const authPages = ['/sign-in', '/sign-up', '/forgot-password', '/verify-email'];
-    setIsVisible(!authPages.includes(pathname));
+    const isDashboardPage = pathname?.startsWith('/dashboard/');
+    
+    setIsVisible(!authPages.includes(pathname) && !isDashboardPage);
   }, [pathname]);
 
-  // ✅ Ne rien afficher si on est sur une page d'auth
+  // ✅ Ne rien afficher si on est sur une page d'auth ou dashboard
   if (!isVisible) return null;
 
   return (

@@ -28,6 +28,9 @@ export function Navbar() {
 
   const closeMenu = () => setIsMobileMenuOpen(false);
 
+  // ✅ Vérifier si on est sur une page de dashboard
+  const isDashboardPage = pathname?.startsWith('/dashboard/');
+
   // ✅ Ne rien afficher si on est sur une page d'auth
   if (!isVisible) return null;
 
@@ -35,15 +38,19 @@ export function Navbar() {
     <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-2" onClick={closeMenu}>
-              <Truck className="h-8 w-8 text-blue-700" />
-              <span className="font-bold text-xl text-slate-900">CamionGo</span>
-            </Link>
-          </div>
+          {/* Logo - caché sur les pages dashboard */}
+          {!isDashboardPage && (
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center gap-2" onClick={closeMenu}>
+                <Truck className="h-8 w-8 text-blue-700" />
+                <span className="font-bold text-xl text-slate-900">CamionGo</span>
+              </Link>
+            </div>
+          )}
+
           {/* Desktop Menu - Non connecté */}
           {!user && (
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-4 ml-auto">
               <Link href="/contact" className="text-base font-medium text-black hover:text-blue-700 transition-colors px-2">
                 Contact
               </Link>
@@ -56,9 +63,9 @@ export function Navbar() {
             </div>
           )}
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - seulement si non connecté */}
           {!user && (
-            <div className="flex items-center md:hidden">
+            <div className="flex items-center md:hidden ml-auto">
               <button
                 type="button"
                 className="text-slate-600 hover:text-slate-900 focus:outline-none p-2"

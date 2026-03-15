@@ -1,10 +1,24 @@
 // src/components/Footer.tsx
 'use client';
 
+import { useState, useEffect } from 'react'; // ← Ajoute useState et useEffect
+import { usePathname } from 'next/navigation'; // ← Ajoute usePathname
 import { Truck, Facebook, Twitter, Instagram, Linkedin, ArrowRight } from 'lucide-react';
-import Link from 'next/link';  // ← Changé: import de next/link
+import Link from 'next/link';
 
 export function Footer() {
+  const pathname = usePathname(); // ← Récupère le chemin actuel
+  const [isVisible, setIsVisible] = useState(true); // ← État pour contrôler la visibilité
+
+  // ✅ Masquer le footer sur les pages d'authentification
+  useEffect(() => {
+    const authPages = ['/sign-in', '/sign-up', '/forgot-password', '/verify-email'];
+    setIsVisible(!authPages.includes(pathname));
+  }, [pathname]);
+
+  // ✅ Ne rien afficher si on est sur une page d'auth
+  if (!isVisible) return null;
+
   return (
     <footer className="bg-slate-950 text-slate-300 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,30 +50,30 @@ export function Footer() {
           <div>
             <h3 className="text-white font-semibold text-lg mb-6">Produits</h3>
             <ul className="space-y-4">
-              <li><Link href="/sign-up?role=entreprise" className="hover:text-blue-400 transition-colors">Pour les expéditeurs</Link></li>  {/* ← href */}
-              <li><Link href="/sign-up?role=chauffeur" className="hover:text-blue-400 transition-colors">Pour les transporteurs</Link></li>  {/* ← href */}
-              <li><Link href="/#" className="hover:text-blue-400 transition-colors">CamionGo Entreprise</Link></li>  {/* ← href */}
-              <li><Link href="/#" className="hover:text-blue-400 transition-colors">Tarification</Link></li>  {/* ← href */}
+              <li><Link href="/sign-up?role=entreprise" className="hover:text-blue-400 transition-colors">Pour les expéditeurs</Link></li>
+              <li><Link href="/sign-up?role=chauffeur" className="hover:text-blue-400 transition-colors">Pour les transporteurs</Link></li>
+              <li><Link href="/#" className="hover:text-blue-400 transition-colors">CamionGo Entreprise</Link></li>
+              <li><Link href="/#" className="hover:text-blue-400 transition-colors">Tarification</Link></li>
             </ul>
           </div>
 
           <div>
             <h3 className="text-white font-semibold text-lg mb-6">Ressources</h3>
             <ul className="space-y-4">
-              <li><Link href="#" className="hover:text-blue-400 transition-colors">Centre d'aide</Link></li>  {/* ← href */}
-              <li><Link href="#" className="hover:text-blue-400 transition-colors">Blog</Link></li>  {/* ← href */}
-              <li><Link href="#" className="hover:text-blue-400 transition-colors">Guide d'utilisation</Link></li>  {/* ← href */}
-              <li><Link href="/contact" className="hover:text-blue-400 transition-colors">Contactez-nous</Link></li>  {/* ← href */}
+              <li><Link href="/#" className="hover:text-blue-400 transition-colors">Centre d'aide</Link></li>
+              <li><Link href="/#" className="hover:text-blue-400 transition-colors">Blog</Link></li>
+              <li><Link href="/#" className="hover:text-blue-400 transition-colors">Guide d'utilisation</Link></li>
+              <li><Link href="/contact" className="hover:text-blue-400 transition-colors">Contactez-nous</Link></li>
             </ul>
           </div>
 
           <div>
             <h3 className="text-white font-semibold text-lg mb-6">Légal</h3>
             <ul className="space-y-4">
-              <li><Link href="#" className="hover:text-blue-400 transition-colors">Conditions générales</Link></li>  {/* ← href */}
-              <li><Link href="#" className="hover:text-blue-400 transition-colors">Politique de confidentialité</Link></li>  {/* ← href */}
-              <li><Link href="#" className="hover:text-blue-400 transition-colors">Mentions légales</Link></li>  {/* ← href */}
-              <li><Link href="#" className="hover:text-blue-400 transition-colors">Assurance & Sécurité</Link></li>  {/* ← href */}
+              <li><Link href="/#" className="hover:text-blue-400 transition-colors">Conditions générales</Link></li>
+              <li><Link href="/#" className="hover:text-blue-400 transition-colors">Politique de confidentialité</Link></li>
+              <li><Link href="/#" className="hover:text-blue-400 transition-colors">Mentions légales</Link></li>
+              <li><Link href="/#" className="hover:text-blue-400 transition-colors">Assurance & Sécurité</Link></li>
             </ul>
           </div>
         </div>

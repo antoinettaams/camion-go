@@ -1,16 +1,24 @@
 // src/components/Navbar.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // ← Ajoute useEffect
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation'; // ← Ajoute usePathname
 import { Truck, LogOut, User as UserIcon, Menu, X, LogIn, UserPlus, CircleHelp } from 'lucide-react';
-import { useAppContext } from '@/app/context/AppContext';  // ← Chemin absolu
+import { useAppContext } from '@/app/context/AppContext';
 
 export function Navbar() {
   const { user, logout } = useAppContext();
   const router = useRouter();
+  const pathname = usePathname(); // ← Récupère le chemin actuel
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true); // ← État pour contrôler la visibilité
+
+  // ✅ Masquer la navbar sur les pages d'authentification
+  useEffect(() => {
+    const authPages = ['/sign-in', '/sign-up', '/forgot-password', '/verify-email'];
+    setIsVisible(!authPages.includes(pathname));
+  }, [pathname]);
 
   const handleLogout = () => {
     logout(); 
@@ -19,6 +27,9 @@ export function Navbar() {
   };
 
   const closeMenu = () => setIsMobileMenuOpen(false);
+
+  // ✅ Ne rien afficher si on est sur une page d'auth
+  if (!isVisible) return null;
 
   return (
     <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
@@ -39,13 +50,13 @@ export function Navbar() {
               </span>
               {user.role === 'entreprise' ? (
                 <>
-                  <Link href="/entreprise" className="nav-link">Dashboard</Link>
-                  <Link href="/entreprise/nouvelle-demande" className="nav-link">Nouvelle mission</Link>
+                  <Link href="/dashboard/entreprise" className="nav-link">Dashboard</Link>
+                  <Link href="/dashboard/entreprise/nouvelle-demande" className="nav-link">Nouvelle mission</Link>
                 </>
               ) : (
                 <>
-                  <Link href="/chauffeur" className="nav-link">Dashboard</Link>
-                  <Link href="/chauffeur/mes-missions" className="nav-link">Mes missions</Link>
+                  <Link href="/dashboard/chauffeur" className="nav-link">Dashboard</Link>
+                  <Link href="/dashboard/chauffeur/mes-missions" className="nav-link">Mes missions</Link>
                 </>
               )}
               <Link href="/profil" className="nav-link">Profil</Link>

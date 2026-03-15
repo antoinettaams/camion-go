@@ -217,16 +217,6 @@ export default function SignInPage() {
             )}
           </Button>
         </form>
-
-        {/* Comptes de démo */}
-        <div className="bg-blue-50 p-4 rounded-md text-sm text-blue-800">
-          <p className="font-semibold mb-1">Compte de démo :</p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Email: <strong>julie@gmail.com</strong> (entreprise)</li>
-            <li>Email: <strong>koffi@camion.bj</strong> (chauffeur)</li>
-            <li>Mot de passe: celui que tu as choisi</li>
-          </ul>
-        </div>
       </div>
     </div>
   );

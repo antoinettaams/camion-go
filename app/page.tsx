@@ -12,7 +12,8 @@ export default function HomePage() {
 
   useEffect(() => {
     if (user) {
-      router.push(user.role === 'entreprise' ? '/entreprise' : '/chauffeur');
+      // ✅ Corrigé : ajout de /dashboard/
+      router.push(user.role === 'entreprise' ? '/dashboard/entreprise' : '/dashboard/chauffeur');
     }
   }, [user, router]);
 

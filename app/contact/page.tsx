@@ -1,11 +1,72 @@
 // src/app/contact/page.tsx
 'use client';
 
-import React from 'react';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import React, { useState } from 'react';
+import { Mail, Phone, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
 import { Input } from '../components/ui/Input';    
 import { Button } from '../components/ui/Button';
-export default function ContactPage() { 
+
+export default function ContactPage() {
+  const [formState, setFormState] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+  
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Remplacez par votre endpoint Formspree
+  const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xjgaegyr';
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormState(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitStatus('loading');
+    setErrorMessage('');
+
+    try {
+      const response = await fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formState.name,
+          email: formState.email,
+          message: formState.message,
+          _subject: `Nouveau message de ${formState.name} via le formulaire de contact`,
+        }),
+      });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        setFormState({ name: '', email: '', message: '' });
+        
+        // Réinitialiser le message de succès après 5 secondes
+        setTimeout(() => {
+          setSubmitStatus('idle');
+        }, 5000);
+      } else {
+        const data = await response.json();
+        throw new Error(data.error || 'Une erreur est survenue lors de l\'envoi');
+      }
+    } catch (error) {
+      setSubmitStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : 'Erreur lors de l\'envoi du message');
+      
+      // Réinitialiser le message d'erreur après 5 secondes
+      setTimeout(() => {
+        setSubmitStatus('idle');
+        setErrorMessage('');
+      }, 5000);
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto space-y-8">
@@ -22,11 +83,11 @@ export default function ContactPage() {
             <h2 className="text-xl font-semibold text-slate-900">Contactez-nous</h2>
             <div className="flex items-center gap-3 text-slate-600">
               <Phone className="h-5 w-5 text-blue-700" />
-              <span>+229 90 00 00 00</span>
+              <span>+229 93 36 19 42</span>
             </div>
             <div className="flex items-center gap-3 text-slate-600">
               <Mail className="h-5 w-5 text-blue-700" />
-              <span>support@camiongo.bj</span>
+              <span>antoinettaams@gmail.com</span>
             </div>
             <div className="flex items-center gap-3 text-slate-600">
               <MapPin className="h-5 w-5 text-blue-700" />
@@ -35,23 +96,76 @@ export default function ContactPage() {
           </div>
 
           {/* Contact Form */}
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Nom</label>
-              <Input placeholder="Votre nom" />
+              <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
+                Nom
+              </label>
+              <Input
+                id="name"
+                name="name"
+                value={formState.name}
+                onChange={handleChange}
+                placeholder="Votre nom"
+                required
+                disabled={submitStatus === 'loading'}
+              />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-              <Input type="email" placeholder="votre@email.com" />
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+                Email
+              </label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formState.email}
+                onChange={handleChange}
+                placeholder="votre@email.com"
+                required
+                disabled={submitStatus === 'loading'}
+              />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Message</label>
-              <textarea 
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+              <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-1">
+                Message
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                value={formState.message}
+                onChange={handleChange}
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] disabled:bg-slate-50 disabled:cursor-not-allowed"
                 placeholder="Comment pouvons-nous vous aider ?"
-              ></textarea>
+                required
+                disabled={submitStatus === 'loading'}
+              />
             </div>
-            <Button type="submit" className="w-full">Envoyer le message</Button>
+
+            {/* Status Messages */}
+            {submitStatus === 'success' && (
+              <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-md">
+                <CheckCircle className="h-5 w-5" />
+                <span className="text-sm">Message envoyé avec succès ! Nous vous répondrons dans les plus brefs délais.</span>
+              </div>
+            )}
+
+            {submitStatus === 'error' && (
+              <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-md">
+                <AlertCircle className="h-5 w-5" />
+                <span className="text-sm">{errorMessage || 'Erreur lors de l\'envoi du message. Veuillez réessayer.'}</span>
+              </div>
+            )}
+
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={submitStatus === 'loading'}
+            >
+              {submitStatus === 'loading' ? 'Envoi en cours...' : 'Envoyer le message'}
+            </Button>
           </form>
         </div>
       </div>

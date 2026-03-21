@@ -11,7 +11,7 @@ import { useAppContext } from '@/app/context/AppContext';
 import { useFirebaseAuth } from '@/app/context/FirebaseAuthContext';
 import { cn } from '@/app/lib/utils';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/app/lib/firebase';
+import { db } from '@/app/lib/firebase'; 
 import toast from 'react-hot-toast';
 
 export default function SignInPage() {
@@ -113,26 +113,26 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
+      <div className="max-w-md w-full space-y-8 bg-[var(--bg-secondary)] p-8 rounded-2xl shadow-sm border border-[var(--border-color)]">
         <div className="text-center">
-          <Truck className="mx-auto h-12 w-12 text-blue-700" />
-          <h2 className="mt-6 text-3xl font-bold text-slate-900">Connexion</h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <Truck className="mx-auto h-12 w-12 text-blue-600 dark:text-blue-400" />
+          <h2 className="mt-6 text-3xl font-bold text-[var(--text-primary)]">Connexion</h2>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
             Ou{' '}
-            <Link href="/sign-up" className="font-medium text-blue-700 hover:text-blue-600">
+            <Link href="/sign-up" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
               créez un compte gratuitement
             </Link>
           </p>
         </div>
         
         {error && (
-          <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm">
+          <div className="bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 p-3 rounded-md text-sm border border-red-200 dark:border-red-500/20">
             {error}
           </div>
         )}
         
-        <div className="flex p-1 bg-slate-100 rounded-lg mb-6">
+        <div className="flex p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg mb-6">
           <button
             type="button"
             onClick={() => {
@@ -141,7 +141,9 @@ export default function SignInPage() {
             }}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-md transition-all",
-              role === 'entreprise' ? "bg-white text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              role === 'entreprise' 
+                ? "bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-sm" 
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             )}
           >
             <Building2 className="w-4 h-4" />
@@ -155,7 +157,9 @@ export default function SignInPage() {
             }}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-md transition-all",
-              role === 'chauffeur' ? "bg-white text-blue-500 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              role === 'chauffeur' 
+                ? "bg-white dark:bg-slate-800 text-blue-500 dark:text-blue-400 shadow-sm" 
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             )}
           >
             <Truck className="w-4 h-4" />
@@ -166,7 +170,7 @@ export default function SignInPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Adresse email</label>
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Adresse email</label>
               <Input
                 type="email"
                 required
@@ -177,16 +181,17 @@ export default function SignInPage() {
                 }}
                 placeholder="exemple@email.com"
                 disabled={isLoading}
+                className="bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
               />
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-sm font-medium text-slate-700">
+                <label className="block text-sm font-medium text-[var(--text-primary)]">
                   Mot de passe
                 </label>
                 <Link 
                   href="/forgot-password" 
-                  className="text-sm text-blue-600 hover:text-blue-700"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                 >
                   Mot de passe oublié ?
                 </Link>
@@ -198,12 +203,18 @@ export default function SignInPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 disabled={isLoading}
+                className="bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
               />
             </div>
           </div>
           <Button 
             type="submit" 
-            className={cn("w-full", role === 'chauffeur' ? "bg-blue-500 hover:bg-blue-600" : "bg-blue-700 hover:bg-blue-800")} 
+            className={cn(
+              "w-full",
+              role === 'chauffeur' 
+                ? "bg-blue-500 hover:bg-blue-600 dark:bg-blue-500 dark:hover:bg-blue-600" 
+                : "bg-blue-700 hover:bg-blue-800 dark:bg-blue-700 dark:hover:bg-blue-800"
+            )} 
             size="lg"
             disabled={isLoading}
           >

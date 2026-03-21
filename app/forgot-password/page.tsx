@@ -29,10 +29,6 @@ export default function ForgotPasswordPage() {
       toast.success('✅ Email de réinitialisation envoyé !', {
         duration: 5000,
         icon: '📧',
-        style: {
-          background: '#10b981',
-          color: 'white',
-        },
       });
       
     } catch (err: any) {
@@ -53,10 +49,6 @@ export default function ForgotPasswordPage() {
       setError(errorMessage);
       toast.error(errorMessage, {
         duration: 4000,
-        style: {
-          background: '#ef4444',
-          color: 'white',
-        },
       });
     } finally {
       setIsLoading(false);
@@ -64,12 +56,12 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
+      <div className="max-w-md w-full space-y-8 bg-[var(--bg-secondary)] p-8 rounded-2xl shadow-sm border border-[var(--border-color)]">
         <div className="text-center">
-          <Truck className="mx-auto h-12 w-12 text-blue-700" />
-          <h2 className="mt-6 text-3xl font-bold text-slate-900">Mot de passe oublié ?</h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <Truck className="mx-auto h-12 w-12 text-blue-600 dark:text-blue-400" />
+          <h2 className="mt-6 text-3xl font-bold text-[var(--text-primary)]">Mot de passe oublié ?</h2>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
             {!isSent 
               ? "Saisissez votre email pour recevoir un lien de réinitialisation"
               : "Vérifiez votre boîte de réception"
@@ -78,16 +70,16 @@ export default function ForgotPasswordPage() {
         </div>
 
         {error && !isSent && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-red-700">{error}</p>
+          <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-lg p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
           </div>
         )}
 
         {!isSent ? (
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                 Adresse email
               </label>
               <Input
@@ -97,12 +89,13 @@ export default function ForgotPasswordPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="votre@email.com"
                 disabled={isLoading}
+                className="bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
               />
             </div>
 
             <Button 
               type="submit" 
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
               size="lg"
               disabled={isLoading}
             >
@@ -119,7 +112,7 @@ export default function ForgotPasswordPage() {
             <div className="text-center">
               <Link 
                 href="/sign-in" 
-                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700"
+                className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
               >
                 <ArrowLeft className="w-4 h-4 mr-1" />
                 Retour à la connexion
@@ -128,20 +121,20 @@ export default function ForgotPasswordPage() {
           </form>
         ) : (
           <div className="mt-8 space-y-6">
-            <div className="bg-green-50 p-6 rounded-lg text-center">
+            <div className="bg-green-50 dark:bg-green-500/10 p-6 rounded-lg text-center border border-green-200 dark:border-green-500/20">
               <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                  <MailCheck className="w-8 h-8 text-green-600" />
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center">
+                  <MailCheck className="w-8 h-8 text-green-600 dark:text-green-400" />
                 </div>
               </div>
-              <h3 className="text-lg font-semibold text-green-800 mb-2">
+              <h3 className="text-lg font-semibold text-green-800 dark:text-green-400 mb-2">
                 Email envoyé !
               </h3>
-              <p className="text-sm text-green-700 mb-4">
+              <p className="text-sm text-green-700 dark:text-green-400 mb-4">
                 Nous avons envoyé un lien de réinitialisation à :<br />
                 <strong className="font-medium">{email}</strong>
               </p>
-              <p className="text-xs text-green-600">
+              <p className="text-xs text-green-600 dark:text-green-500">
                 Si vous ne recevez pas d'email dans les minutes qui suivent, 
                 vérifiez vos spams ou réessayez.
               </p>
@@ -160,7 +153,7 @@ export default function ForgotPasswordPage() {
               </Button>
               
               <Link href="/sign-in">
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700">
                   Retour à la connexion
                 </Button>
               </Link>

@@ -11,14 +11,14 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const pathname = usePathname();
+  const pathname = usePathname(); 
   const isDashboard = pathname.startsWith('/dashboard/entreprise') || pathname.startsWith('/dashboard/chauffeur');
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-[var(--bg-primary)]">
       <Navbar />
       <main className="flex-grow flex flex-col">
-        {children}  {/* ← Ceci remplace Outlet */}
+        {children}
       </main>
       {!isDashboard && <Footer />}
     </div>

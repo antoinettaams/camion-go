@@ -1,3 +1,4 @@
+// src/types/index.ts
 export type Role = 'entreprise' | 'chauffeur';
 
 export interface User {
@@ -13,6 +14,12 @@ export interface User {
   capacity?: number;
   zone?: string;
   rating?: number;
+  // Champs supplémentaires pour le profil
+  avatar?: string;        // ← AJOUTÉ
+  address?: string;       // ← AJOUTÉ
+  siret?: string;         // ← AJOUTÉ
+  bio?: string;           // ← AJOUTÉ
+  createdAt?: string;     // ← AJOUTÉ
 }
 
 export type MissionStatus = 'En attente' | 'Devis reçus' | 'Confirmée' | 'En cours' | 'Livrée' | 'Annulée';
@@ -38,8 +45,8 @@ export interface Mission {
   note?: string;
   status: MissionStatus;
   createdAt: string;
-  acceptedQuoteId?: string;
-  driverId?: string;
+  acceptedQuoteId?: string | null;
+  driverId?: string | null;
 }
 
 export interface Rating {

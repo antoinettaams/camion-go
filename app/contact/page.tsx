@@ -68,29 +68,29 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-[calc(100vh-4rem)] bg-[var(--bg-primary)] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-slate-900">Aide et support</h1>
-          <p className="mt-4 text-lg text-slate-600">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)]">Aide et support</h1>
+          <p className="mt-4 text-lg text-[var(--text-secondary)]">
             Notre équipe est là pour vous aider. N'hésitez pas à nous contacter pour toute question ou assistance.
           </p>
         </div>
 
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-[var(--bg-secondary)] p-8 rounded-2xl shadow-sm border border-[var(--border-color)] grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Contact Info */}
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-slate-900">Contactez-nous</h2>
-            <div className="flex items-center gap-3 text-slate-600">
-              <Phone className="h-5 w-5 text-blue-700" />
+            <h2 className="text-xl font-semibold text-[var(--text-primary)]">Contactez-nous</h2>
+            <div className="flex items-center gap-3 text-[var(--text-secondary)]">
+              <Phone className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <span>+229 93 36 19 42</span>
             </div>
-            <div className="flex items-center gap-3 text-slate-600">
-              <Mail className="h-5 w-5 text-blue-700" />
+            <div className="flex items-center gap-3 text-[var(--text-secondary)]">
+              <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <span>antoinettaams@gmail.com</span>
             </div>
-            <div className="flex items-center gap-3 text-slate-600">
-              <MapPin className="h-5 w-5 text-blue-700" />
+            <div className="flex items-center gap-3 text-[var(--text-secondary)]">
+              <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <span>Cotonou, Bénin</span>
             </div>
           </div>
@@ -98,7 +98,7 @@ export default function ContactPage() {
           {/* Contact Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="name" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                 Nom
               </label>
               <Input
@@ -109,11 +109,12 @@ export default function ContactPage() {
                 placeholder="Votre nom"
                 required
                 disabled={submitStatus === 'loading'}
+                className="bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
               />
             </div>
             
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                 Email
               </label>
               <Input
@@ -125,11 +126,12 @@ export default function ContactPage() {
                 placeholder="votre@email.com"
                 required
                 disabled={submitStatus === 'loading'}
+                className="bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
               />
             </div>
             
             <div>
-              <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="message" className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                 Message
               </label>
               <textarea
@@ -137,7 +139,7 @@ export default function ContactPage() {
                 name="message"
                 value={formState.message}
                 onChange={handleChange}
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] disabled:bg-slate-50 disabled:cursor-not-allowed"
+                className="w-full rounded-md border border-[var(--border-color)] bg-[var(--input-bg)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="Comment pouvons-nous vous aider ?"
                 required
                 disabled={submitStatus === 'loading'}
@@ -146,14 +148,14 @@ export default function ContactPage() {
 
             {/* Status Messages */}
             {submitStatus === 'success' && (
-              <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-md">
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10 p-3 rounded-md border border-green-200 dark:border-green-500/20">
                 <CheckCircle className="h-5 w-5" />
                 <span className="text-sm">Message envoyé avec succès ! Nous vous répondrons dans les plus brefs délais.</span>
               </div>
             )}
 
             {submitStatus === 'error' && (
-              <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-md">
+              <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 p-3 rounded-md border border-red-200 dark:border-red-500/20">
                 <AlertCircle className="h-5 w-5" />
                 <span className="text-sm">{errorMessage || 'Erreur lors de l\'envoi du message. Veuillez réessayer.'}</span>
               </div>

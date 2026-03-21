@@ -129,26 +129,29 @@ export default function SignUpPage() {
       setIsRedirecting(false);
     }
   };
+  
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
-      <div className="max-w-xl w-full space-y-8 bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
+      <div className="max-w-xl w-full space-y-8 bg-[var(--bg-secondary)] p-8 rounded-2xl shadow-sm border border-[var(--border-color)]">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-slate-900">Créer un compte</h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <h2 className="text-3xl font-bold text-[var(--text-primary)]">Créer un compte</h2>
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
             Déjà inscrit ?{' '}
-            <Link href="/sign-in" className="font-medium text-blue-700 hover:text-blue-600">
+            <Link href="/sign-in" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
               Connectez-vous
             </Link>
           </p>
         </div>
 
-        <div className="flex p-1 bg-slate-100 rounded-lg">
+        <div className="flex p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
           <button
             type="button"
             onClick={() => setRole('entreprise')}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-md transition-all",
-              role === 'entreprise' ? "bg-white text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              role === 'entreprise' 
+                ? "bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-sm" 
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             )}
           >
             <Building2 className="w-4 h-4" />
@@ -159,7 +162,9 @@ export default function SignUpPage() {
             onClick={() => setRole('chauffeur')}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-md transition-all",
-              role === 'chauffeur' ? "bg-white text-blue-500 shadow-sm" : "text-slate-600 hover:text-slate-900"
+              role === 'chauffeur' 
+                ? "bg-white dark:bg-slate-800 text-blue-500 dark:text-blue-400 shadow-sm" 
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             )}
           >
             <Truck className="w-4 h-4" />
@@ -170,18 +175,19 @@ export default function SignUpPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1">Nom complet</label>
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Nom complet</label>
               <Input 
                 required 
                 value={formData.name} 
                 onChange={e => setFormData({...formData, name: e.target.value})} 
                 placeholder="Jean Dupont"
                 disabled={isLoading || isRedirecting}
+                className="bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Email</label>
               <Input 
                 type="email" 
                 required 
@@ -189,22 +195,24 @@ export default function SignUpPage() {
                 onChange={e => setFormData({...formData, email: e.target.value})} 
                 placeholder="jean@exemple.com"
                 disabled={isLoading || isRedirecting}
+                className="bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Téléphone</label>
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Téléphone</label>
               <Input 
                 required 
                 value={formData.phone} 
                 onChange={e => setFormData({...formData, phone: e.target.value})} 
                 placeholder="+229 90000000"
                 disabled={isLoading || isRedirecting}
+                className="bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1">Mot de passe</label>
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Mot de passe</label>
               <Input 
                 type="password" 
                 required 
@@ -212,18 +220,20 @@ export default function SignUpPage() {
                 onChange={e => setFormData({...formData, password: e.target.value})} 
                 placeholder="••••••••"
                 disabled={isLoading || isRedirecting}
+                className="bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
               />
             </div>
 
             {role === 'entreprise' && (
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Nom de l'entreprise</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Nom de l'entreprise</label>
                 <Input 
                   required 
                   value={formData.companyName} 
                   onChange={e => setFormData({...formData, companyName: e.target.value})} 
                   placeholder="Ma Société SARL"
                   disabled={isLoading || isRedirecting}
+                  className="bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
                 />
               </div>
             )}
@@ -231,17 +241,18 @@ export default function SignUpPage() {
             {role === 'chauffeur' && (
               <>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Type de camion</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Type de camion</label>
                   <Select 
                     value={formData.truckType} 
                     onChange={e => setFormData({...formData, truckType: e.target.value})}
                     disabled={isLoading || isRedirecting}
+                    className="bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)]"
                   >
                     {TRUCK_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </Select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Capacité (Tonnes)</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Capacité (Tonnes)</label>
                   <Input 
                     type="number" 
                     min="1" 
@@ -249,14 +260,16 @@ export default function SignUpPage() {
                     value={formData.capacity} 
                     onChange={e => setFormData({...formData, capacity: e.target.value})}
                     disabled={isLoading || isRedirecting}
+                    className="bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Zone principale</label>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Zone principale</label>
                   <Select 
                     value={formData.zone} 
                     onChange={e => setFormData({...formData, zone: e.target.value})}
                     disabled={isLoading || isRedirecting}
+                    className="bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)]"
                   >
                     {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </Select>
@@ -267,7 +280,12 @@ export default function SignUpPage() {
 
           <Button 
             type="submit" 
-            className={cn("w-full", role === 'chauffeur' ? "bg-blue-500 hover:bg-blue-600" : "bg-blue-700 hover:bg-blue-800")} 
+            className={cn(
+              "w-full",
+              role === 'chauffeur' 
+                ? "bg-blue-500 hover:bg-blue-600 dark:bg-blue-500 dark:hover:bg-blue-600" 
+                : "bg-blue-700 hover:bg-blue-800 dark:bg-blue-700 dark:hover:bg-blue-800"
+            )} 
             size="lg"
             disabled={isLoading || isRedirecting}
           >

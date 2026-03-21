@@ -3,10 +3,11 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, MapPin, Calendar, Package, Star, Phone, CheckCircle2, ArrowUpDown } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Package, Star, Phone, CheckCircle2, ArrowUpDown, MessageCircle, Lock, CreditCard } from 'lucide-react';
 import { Button } from '@/app/components/ui/Button';
 import { Badge } from '@/app/components/ui/Badge';
 import { useAppContext } from '@/app/context/AppContext';
+import toast from 'react-hot-toast';
 
 type SortOption = 'price_asc' | 'price_desc' | 'time_asc' | 'time_desc';
 
@@ -24,7 +25,7 @@ const parseEstimatedTime = (timeStr: string): number => {
 
 export default function MissionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const { missions, quotes, users, acceptQuote, addRating, ratings } = useAppContext();
+  const { user, missions, quotes, users, acceptQuote, addRating, ratings, updateMissionStatus } = useAppContext();
   
   const [ratingStars, setRatingStars] = useState(5);
   const [ratingComment, setRatingComment] = useState('');
@@ -54,6 +55,9 @@ export default function MissionDetailPage({ params }: { params: Promise<{ id: st
   const acceptedQuote = quotes.find(q => q.id === mission.acceptedQuoteId);
   const assignedDriver = users.find(u => u.id === mission.driverId);
   const existingRating = ratings.find(r => r.missionId === mission.id);
+  
+  // Vérifier si le paiement a été effectué
+  const isPaid = mission.status === 'Payée' || mission.status === 'Livrée';
 
   const sortedQuotes = useMemo(() => {
     return [...missionQuotes].sort((a, b) => {
@@ -75,6 +79,25 @@ export default function MissionDetailPage({ params }: { params: Promise<{ id: st
   const handleAcceptQuote = (quoteId: string) => {
     if (confirm("Êtes-vous sûr de vouloir accepter ce devis ?")) {
       acceptQuote(mission.id, quoteId);
+    }
+  };
+
+  // Simuler le paiement de la commission
+  const handlePayment = async () => {
+    if (confirm("Payer la commission pour débloquer le contact du chauffeur ?")) {
+      toast.loading('Traitement du paiement...', { id: 'payment' });
+      
+      try {
+        // Simuler un paiement (à remplacer par votre logique de paiement réelle)
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Mettre à jour le statut de la mission
+        await updateMissionStatus(mission.id, 'Payée');
+        
+        toast.success('✅ Paiement effectué ! Le numéro du chauffeur est maintenant visible.', { id: 'payment' });
+      } catch (error) {
+        toast.error('❌ Erreur lors du paiement', { id: 'payment' });
+      }
     }
   };
 
@@ -104,6 +127,17 @@ export default function MissionDetailPage({ params }: { params: Promise<{ id: st
     const trimmed = mission.weightVolume.trim();
     if (trimmed === "" || trimmed === "tonnes") return "Non spécifié";
     return trimmed;
+  };
+
+  // Fonction pour copier le numéro WhatsApp
+  const handleWhatsAppClick = () => {
+    if (assignedDriver?.phone) {
+      const phoneNumber = assignedDriver.phone.replace(/[^0-9+]/g, '');
+      const whatsappUrl = `https://wa.me/${phoneNumber}`;
+      window.open(whatsappUrl, '_blank');
+    } else {
+      toast.error('Numéro de téléphone non disponible');
+    }
   };
 
   return (
@@ -243,6 +277,67 @@ export default function MissionDetailPage({ params }: { params: Promise<{ id: st
               </div>
             )}
 
+            {/* Section Contact - UNIQUEMENT SI PAYÉ */}
+            {assignedDriver && mission.status === 'Payée' && (
+              <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] shadow-sm p-6">
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-green-500" />
+                  Contacter le chauffeur
+                </h2>
+                <div className="space-y-4">
+                  <div className="bg-green-50 dark:bg-green-500/10 p-4 rounded-lg border border-green-200 dark:border-green-500/20">
+                    <p className="text-sm text-green-800 dark:text-green-300 mb-3">
+                      Le paiement a été effectué. Vous pouvez maintenant contacter le chauffeur.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button 
+                        onClick={handleWhatsAppClick}
+                        className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Contacter sur WhatsApp
+                      </Button>
+                      <div className="text-sm text-[var(--text-secondary)] p-2">
+                        <span className="font-medium">Numéro :</span> {assignedDriver.phone}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Section Paiement - SI PAS ENCORE PAYÉ */}
+            {assignedDriver && mission.status === 'Confirmée' && (
+              <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] shadow-sm p-6">
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-amber-500" />
+                  Débloquer le contact du chauffeur
+                </h2>
+                <div className="space-y-4">
+                  <div className="bg-amber-50 dark:bg-amber-500/10 p-4 rounded-lg border border-amber-200 dark:border-amber-500/20">
+                    <p className="text-sm text-amber-800 dark:text-amber-300 mb-3">
+                      Pour contacter le chauffeur, vous devez d'abord payer la commission de mise en relation.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button 
+                        onClick={handlePayment}
+                        className="bg-amber-600 hover:bg-amber-700 flex items-center gap-2"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        Payer la commission (10% du montant)
+                      </Button>
+                      <div className="text-sm text-[var(--text-secondary)] p-2">
+                        Commission : <span className="font-bold text-amber-600 dark:text-amber-400">{Math.round(acceptedQuote.price * 0.1).toLocaleString('fr-FR')} FCFA</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-3">
+                      Après paiement, le numéro du chauffeur sera dévoilé et vous pourrez le contacter directement.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Rating Section (if delivered) */}
             {mission.status === 'Livrée' && !existingRating && (
               <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] shadow-sm p-6">
@@ -319,19 +414,38 @@ export default function MissionDetailPage({ params }: { params: Promise<{ id: st
                   <div className="flex items-center justify-between py-2 border-b border-[var(--border-color)]">
                     <span className="text-[var(--text-secondary)]">Contact</span>
                     <span className="font-medium flex items-center gap-1">
-                      <Phone className="w-3 h-3" /> {assignedDriver.phone}
+                      {isPaid ? (
+                        <a href={`tel:${assignedDriver.phone}`} className="text-blue-600 dark:text-blue-400 hover:underline">
+                          {assignedDriver.phone}
+                        </a>
+                      ) : (
+                        <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                          <Lock className="w-3 h-3" />
+                          Verrouillé
+                        </span>
+                      )}
                     </span>
                   </div>
                 </div>
 
-                <div className="mt-6">
-                  <a href={`tel:${assignedDriver.phone}`} className="block">
-                    <Button className="w-full flex items-center justify-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      Appeler le chauffeur
-                    </Button>
-                  </a>
-                </div>
+                {!isPaid && (
+                  <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-500/10 rounded-lg">
+                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                      🔒 Le numéro sera dévoilé après paiement de la commission
+                    </p>
+                  </div>
+                )}
+
+                {isPaid && (
+                  <div className="mt-6">
+                    <a href={`tel:${assignedDriver.phone}`} className="block">
+                      <Button className="w-full flex items-center justify-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        Appeler le chauffeur
+                      </Button>
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] shadow-sm p-6">
@@ -342,6 +456,18 @@ export default function MissionDetailPage({ params }: { params: Promise<{ id: st
                     <span className="font-bold text-blue-600 dark:text-blue-400 text-lg">{acceptedQuote.price.toLocaleString('fr-FR')} FCFA</span>
                   </div>
                   <div className="flex items-center justify-between py-2 border-b border-[var(--border-color)]">
+                    <span className="text-[var(--text-secondary)]">Commission (10%)</span>
+                    <span className="font-medium text-amber-600 dark:text-amber-400">
+                      {Math.round(acceptedQuote.price * 0.1).toLocaleString('fr-FR')} FCFA
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 border-b border-[var(--border-color)]">
+                    <span className="text-[var(--text-secondary)]">Net chauffeur</span>
+                    <span className="font-medium text-green-600 dark:text-green-400">
+                      {Math.round(acceptedQuote.price * 0.9).toLocaleString('fr-FR')} FCFA
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
                     <span className="text-[var(--text-secondary)]">Délai estimé</span>
                     <span className="font-medium">{acceptedQuote.estimatedTime}</span>
                   </div>
@@ -353,15 +479,6 @@ export default function MissionDetailPage({ params }: { params: Promise<{ id: st
                     <p className="text-sm text-blue-900 dark:text-blue-300 italic">"{acceptedQuote.message}"</p>
                   </div>
                 )}
-
-                <div className="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg border border-[var(--border-color)]">
-                  <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Modes de paiement acceptés à la livraison</p>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="bg-[var(--bg-secondary)]">MTN Mobile Money</Badge>
-                    <Badge variant="outline" className="bg-[var(--bg-secondary)]">Moov Money</Badge>
-                    <Badge variant="outline" className="bg-[var(--bg-secondary)]">Espèces</Badge>
-                  </div>
-                </div>
               </div>
             </div>
           )}

@@ -200,17 +200,16 @@ export function Profile() {
           {/* Carte de profil principale */}
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-2xl overflow-hidden mb-6">
             {/* En-tête avec bannière */}
-            <div className="h-32 bg-gradient-to-r from-blue-600 to-purple-600 relative">
+            
               {/* Badge vérifié (simulé) */}
               <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-white flex items-center gap-1">
                 <CheckCircle2 size={12} />
                 Entreprise vérifiée
               </div>
-            </div>
 
             {/* Section avatar et infos principales */}
             <div className="px-6 pb-6">
-              <div className="flex flex-col items-center text-center mb-6">
+              <div className="mt-4 flex flex-col items-center text-center mb-6">
                 {/* Avatar avec upload */}
                 <div className="relative mb-4">
                   <div className="w-24 h-24 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-white font-bold text-3xl overflow-hidden ring-4 ring-[#6C4DFF]/20">

@@ -10,7 +10,7 @@ import {
   Crown,
   Sparkles,
   Eye,
-  EyeOff,
+  EyeOff, 
   Loader2,
   User,
   Mail,
@@ -51,6 +51,7 @@ interface MenuSection {
 export function Settings() {
   const router = useRouter();
   const { user, deleteUserAccount } = useAppContext();
+  const { notificationPreferences, updateNotificationPreferences } = useAppContext();
   const { logout: firebaseLogout } = useFirebaseAuth();
   const [activeMenu, setActiveMenu] = useState('profil');
   const [isMobile, setIsMobile] = useState(false);
@@ -598,56 +599,61 @@ export function Settings() {
                 {activeMenu === 'notifications' && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="space-y-6"
+    animate={{ opacity: 1, y: 0 }}
+    className="space-y-6"
                   >
                     <h2 className="text-xl font-bold mb-6">Notifications</h2>
-                    
+    
                     <div className="space-y-4">
-                      {Object.entries(notifications).map(([key, value]) => (
-                        <div key={key} className="flex items-center justify-between py-3 border-b border-[var(--border-color)]">
-                          <div>
-                            <p className="font-semibold text-[var(--text-primary)]">
-                              {key === 'email' && 'Notifications par email'}
-                              {key === 'push' && 'Notifications push'}
-                            </p>
-                            <p className="text-xs text-[var(--text-secondary)]">
-                              {key === 'email' && 'Recevoir les offres par email'}
-                              {key === 'push' && 'Notifications dans le navigateur'}
-                            </p>
-                          </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={value}
-                              onChange={() => setNotifications({ ...notifications, [key]: !value })}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:bg-blue-600 transition-colors"></div>
-                            <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                          </label>
+                      {/* Notification par email */}
+                      <div className="flex items-center justify-between py-3 border-b border-[var(--border-color)]">
+                        <div>
+                          <p className="font-semibold text-[var(--text-primary)]">
+                            Notifications par email
+                          </p>
+                          <p className="text-xs text-[var(--text-secondary)]">
+                            Recevoir les offres par email
+                          </p>
                         </div>
-                      ))}
-                    </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={notificationPreferences.email}
+                            onChange={() => updateNotificationPreferences({
+                              ...notificationPreferences,
+                              email: !notificationPreferences.email
+                            })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:bg-blue-600 transition-colors"></div>
+                          <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                        </label>
+                      </div>
 
-                    <div className="flex justify-end">
-                      <Button
-                        onClick={handleSaveNotifications}
-                        disabled={isSaving}
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        {isSaving ? (
-                          <>
-                            <Loader2 size={16} className="animate-spin" />
-                            Sauvegarde...
-                          </>
-                        ) : (
-                          <>
-                            <Save size={16} />
-                            Enregistrer
-                          </>
-                        )}
-                      </Button>
+                      {/* Notification push */}
+                      <div className="flex items-center justify-between py-3 border-b border-[var(--border-color)]">
+                        <div>
+                          <p className="font-semibold text-[var(--text-primary)]">
+                            Notifications push
+                          </p>
+                          <p className="text-xs text-[var(--text-secondary)]">
+                            Notifications dans le navigateur
+                          </p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={notificationPreferences.push}
+                            onChange={() => updateNotificationPreferences({
+                              ...notificationPreferences,
+                              push: !notificationPreferences.push
+                            })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:bg-blue-600 transition-colors"></div>
+                          <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                        </label>
+                      </div>
                     </div>
                   </motion.div>
                 )}

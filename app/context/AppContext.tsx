@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Mission, Quote, Rating, MissionStatus } from '../types';
+import toast from 'react-hot-toast';
 import { db } from '@/app/lib/firebase';
 import { 
   collection, 
@@ -15,10 +16,11 @@ import {
   where, 
   orderBy, 
   onSnapshot,
-  Timestamp,
+  Timestamp, 
   Firestore
 } from 'firebase/firestore';
 import { useFirebaseAuth } from './FirebaseAuthContext';
+import { NotificationService } from '../lib/notificationService';
 
 interface AppContextType {
   user: User | null;
@@ -42,6 +44,11 @@ interface AppContextType {
   fetchUserMissions: (userId: string) => Promise<Mission[]>;
   fetchUserQuotes: (driverId: string) => Promise<Quote[]>;
   deleteUserAccount: (userId: string) => Promise<void>;
+  notificationPreferences: {
+    email: boolean;
+    push: boolean;
+  };
+  updateNotificationPreferences: (preferences: { email: boolean; push: boolean }) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -53,6 +60,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [ratings, setRatings] = useState<Rating[]>([]);
+  const [notificationPreferences, setNotificationPreferences] = useState({
+    email: true,
+    push: true,
+  });
   
   const { user: firebaseUser } = useFirebaseAuth();
 
@@ -64,6 +75,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!db) throw new Error("Firestore non disponible");
     return db;
   };
+
+  // ==================== FONCTIONS DE NOTIFICATION ====================
+  // Dans AppContext.tsx
+const addNotification = async (
+  userId: string,
+  type: string,
+  title: string,
+  message: string,
+  link: string,
+  data?: any
+) => {
+  if (!db) return;
+
+  try {
+    // Récupérer les infos de l'utilisateur
+    const userRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userRef);
+    
+    if (!userDoc.exists()) return;
+    
+    const userData = userDoc.data();
+    const userEmail = userData.email;
+    const userName = userData.name || userData.companyName || 'Utilisateur';
+    const preferences = userData.notificationPreferences || { email: true, push: true };
+    
+    // Envoyer la notification via le service
+    await NotificationService.sendNotification({
+      userId,
+      userEmail,
+      userName,
+      type,
+      title,
+      message,
+      link,
+      preferences
+    });
+    
+    console.log(`✅ Notification envoyée à ${userName} (${userId})`);
+  } catch (error) {
+    console.error("❌ Erreur envoi notification:", error);
+  }
+};
 
   // Charger les données depuis Firestore au démarrage
   useEffect(() => {
@@ -153,7 +206,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const firestore = getDb();
           const userDoc = await getDoc(doc(firestore, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
-            setUser({ id: userDoc.id, ...userDoc.data() } as User);
+            const userData = userDoc.data();
+            setUser({ id: userDoc.id, ...userData } as User);
+            
+            // Charger les préférences après avoir chargé l'utilisateur
+            if (userData.notificationPreferences) {
+              setNotificationPreferences(userData.notificationPreferences);
+            }
           }
         } catch (error) {
           console.error("❌ Erreur chargement utilisateur:", error);
@@ -165,6 +224,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     loadUserData();
   }, [firebaseUser, isFirestoreAvailable]);
+
+  // Charger les préférences quand l'utilisateur change (séparément)
+  useEffect(() => {
+    const loadPreferences = async () => {
+      if (!user || !db) return;
+      
+      try {
+        const userRef = doc(db, 'users', user.id);
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          if (data.notificationPreferences) {
+            setNotificationPreferences(data.notificationPreferences);
+          }
+        }
+      } catch (error) {
+        console.error("Erreur chargement préférences:", error);
+      }
+    };
+    
+    loadPreferences();
+  }, [user]);
+
+  // Fonction pour mettre à jour les préférences
+  const updateNotificationPreferences = async (preferences: { email: boolean; push: boolean }) => {
+    if (!user || !db) return;
+    
+    try {
+      const userRef = doc(db, 'users', user.id);
+      await updateDoc(userRef, {
+        notificationPreferences: preferences
+      });
+      setNotificationPreferences(preferences);
+      toast.success('Préférences de notification enregistrées');
+    } catch (error) {
+      console.error("Erreur mise à jour préférences:", error);
+      toast.error('Erreur lors de l\'enregistrement');
+    }
+  };
 
   const login = async (email: string, role?: string) => {
     if (!isFirestoreAvailable) return false;
@@ -180,7 +278,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       if (!querySnapshot.empty) {
         const userDoc = querySnapshot.docs[0];
-        setUser({ id: userDoc.id, ...userDoc.data() } as User);
+        const userData = userDoc.data();
+        setUser({ id: userDoc.id, ...userData } as User);
+        
+        // Charger les préférences après connexion
+        if (userData.notificationPreferences) {
+          setNotificationPreferences(userData.notificationPreferences);
+        }
+        
         return true;
       }
       return false;
@@ -192,6 +297,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null);
+    // Réinitialiser les préférences
+    setNotificationPreferences({ email: true, push: true });
   };
 
   const register = async (userData: Partial<User>) => {
@@ -201,7 +308,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const firestore = getDb();
       const docRef = await addDoc(collection(firestore, 'users'), {
         ...userData,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        notificationPreferences: { email: true, push: true } // Préférences par défaut
       });
       const newUser = { id: docRef.id, ...userData } as User;
       setUsers([...users, newUser]);
@@ -213,36 +321,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addMission = async (missionData: Omit<Mission, 'id' | 'createdAt' | 'status'>) => {
-  if (!isFirestoreAvailable) throw new Error("Firestore non disponible");
-  
-  try {
-    console.log("📦 addMission - Données reçues:", missionData);
+    if (!isFirestoreAvailable) throw new Error("Firestore non disponible");
     
-    const firestore = getDb();
-    const newMission = {
-      ...missionData,
-      status: 'En attente',
-      createdAt: new Date().toISOString()
-    };
-    
-    // S'assurer que weightVolume est bien une chaîne non vide
-    if (!newMission.weightVolume || newMission.weightVolume.trim() === "") {
-      newMission.weightVolume = "Non spécifié";
+    try {
+      console.log("📦 addMission - Données reçues:", missionData);
+      
+      const firestore = getDb();
+      const newMission = {
+        ...missionData,
+        status: 'En attente',
+        createdAt: new Date().toISOString()
+      };
+      
+      if (!newMission.weightVolume || newMission.weightVolume.trim() === "") {
+        newMission.weightVolume = "Non spécifié";
+      }
+      
+      console.log("📦 addMission - Données à sauvegarder:", newMission);
+      
+      const docRef = await addDoc(collection(firestore, 'missions'), newMission);
+      const missionWithId = { id: docRef.id, ...newMission } as Mission;
+      
+      console.log("✅ Mission créée avec ID:", docRef.id);
+      
+      setMissions([missionWithId, ...missions]);
+
+      // 🔔 NOTIFICATION À L'ENTREPRISE
+      await addNotification(
+        missionData.entrepriseId,
+        'mission_created',
+        'Mission créée avec succès !',
+        `Votre demande de transport pour ${missionData.merchandiseType} a été publiée`,
+        `/dashboard/entreprise/mission/${docRef.id}`
+      );
+
+    } catch (error) {
+      console.error("❌ Erreur ajout mission:", error);
+      throw error;
     }
-    
-    console.log("📦 addMission - Données à sauvegarder:", newMission);
-    
-    const docRef = await addDoc(collection(firestore, 'missions'), newMission);
-    const missionWithId = { id: docRef.id, ...newMission } as Mission;
-    
-    console.log("✅ Mission créée avec ID:", docRef.id);
-    
-    setMissions([missionWithId, ...missions]);
-  } catch (error) {
-    console.error("❌ Erreur ajout mission:", error);
-    throw error;
-  }
-};
+  };
 
   const addQuote = async (quoteData: Omit<Quote, 'id' | 'createdAt'>) => {
     if (!isFirestoreAvailable) throw new Error("Firestore non disponible");
@@ -268,6 +385,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ? { ...m, status: 'Devis reçus' } 
           : m
       ));
+
+      // 🔔 NOTIFICATION À L'ENTREPRISE
+      const mission = missions.find(m => m.id === quoteData.missionId);
+      if (mission) {
+        await addNotification(
+          mission.entrepriseId,
+          'new_quote',
+          'Nouveau devis reçu !',
+          `Un chauffeur a proposé un devis pour votre mission ${mission.merchandiseType}`,
+          `/dashboard/entreprise/mission/${mission.id}`
+        );
+      }
+
     } catch (error) {
       console.error("❌ Erreur ajout devis:", error);
       throw error;
@@ -294,6 +424,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ? { ...m, status: 'Confirmée', acceptedQuoteId: quoteId, driverId: quote.driverId } 
           : m
       ));
+
+      // 🔔 NOTIFICATION AU CHAUFFEUR
+      const mission = missions.find(m => m.id === missionId);
+      if (mission) {
+        await addNotification(
+          quote.driverId,
+          'quote_accepted',
+          'Devis accepté !',
+          `Votre devis a été accepté pour la mission ${mission.merchandiseType}`,
+          `/dashboard/chauffeur/mission/${missionId}`
+        );
+      }
+
     } catch (error) {
       console.error("❌ Erreur acceptation devis:", error);
       throw error;
@@ -311,6 +454,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setMissions(missions.map(m => 
         m.id === missionId ? { ...m, status } : m
       ));
+
+      // 🔔 NOTIFICATION POUR CHANGEMENT DE STATUT
+      const mission = missions.find(m => m.id === missionId);
+      if (mission) {
+        let title = '';
+        let message = '';
+        let link = '';
+
+        if (status === 'En cours') {
+          title = 'Livraison en cours !';
+          message = `Votre marchandise ${mission.merchandiseType} est en route.`;
+          link = `/dashboard/entreprise/mission/${missionId}`;
+          await addNotification(mission.entrepriseId, 'delivery_started', title, message, link);
+        } else if (status === 'Livrée') {
+          title = 'Livraison terminée !';
+          message = `Votre marchandise ${mission.merchandiseType} a été livrée.`;
+          link = `/dashboard/entreprise/mission/${missionId}`;
+          await addNotification(mission.entrepriseId, 'delivery_completed', title, message, link);
+          
+          // Notification au chauffeur aussi
+          if (mission.driverId) {
+            await addNotification(mission.driverId, 'delivery_completed', 'Livraison terminée !', `La livraison de ${mission.merchandiseType} est terminée.`, `/dashboard/chauffeur/mission/${missionId}`);
+          }
+        }
+      }
+
     } catch (error) {
       console.error("❌ Erreur mise à jour statut:", error);
       throw error;
@@ -324,7 +493,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const firestore = getDb();
       await deleteDoc(doc(firestore, 'missions', missionId));
       
-      // Supprimer aussi les devis associés
       const quotesQuery = query(collection(firestore, 'quotes'), where('missionId', '==', missionId));
       const quotesSnapshot = await getDocs(quotesQuery);
       quotesSnapshot.forEach(async (doc) => {
@@ -354,7 +522,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       setRatings([...ratings, ratingWithId]);
 
-      // Mettre à jour la note du chauffeur
       if (ratingData.toUserId) {
         const driverRatings = [...ratings, ratingWithId].filter(r => r.toUserId === ratingData.toUserId);
         const avgRating = driverRatings.reduce((acc, curr) => acc + curr.stars, 0) / driverRatings.length;
@@ -461,15 +628,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteUserAccount = async (userId: string) => {
-  if (!isFirestoreAvailable) throw new Error("Firestore non disponible");
-  
+    if (!isFirestoreAvailable) throw new Error("Firestore non disponible");
+    
     try {
       const firestore = getDb();
       
-      // 1. Supprimer le document utilisateur
       await deleteDoc(doc(firestore, 'users', userId));
       
-      // 2. Supprimer tous les devis de l'utilisateur
       const quotesQuery = query(
         collection(firestore, 'quotes'),
         where('driverId', '==', userId)
@@ -479,7 +644,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await deleteDoc(quoteDoc.ref);
       });
       
-      // 3. Supprimer les missions où l'utilisateur est chauffeur
       const missionsQuery = query(
         collection(firestore, 'missions'),
         where('driverId', '==', userId)
@@ -489,7 +653,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await deleteDoc(missionDoc.ref);
       });
       
-      // 4. Supprimer les missions où l'utilisateur est entreprise
       const entrepriseMissionsQuery = query(
         collection(firestore, 'missions'),
         where('entrepriseId', '==', userId)
@@ -505,7 +668,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       throw error;
     }
   };
-
 
   return (
     <AppContext.Provider value={{
@@ -529,7 +691,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateUserAvatar,
       fetchUserMissions,
       fetchUserQuotes,
-      deleteUserAccount
+      deleteUserAccount,
+      notificationPreferences,
+      updateNotificationPreferences,
     }}>
       {children}
     </AppContext.Provider>

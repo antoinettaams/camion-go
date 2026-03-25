@@ -242,8 +242,6 @@ export default function MissionDetailPage({ params }: { params: Promise<{ id: st
                                   <p className="font-bold text-lg">{driver?.name || 'Chauffeur'}</p>
                                   <div className="flex items-center gap-2 text-sm text-[var(--text-secondary)] mt-1">
                                     <span className="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-xs font-medium">{driver?.truckType}</span>
-                                    <span>•</span>
-                                    <span className="flex items-center gap-1 font-medium"><Star className="w-4 h-4 fill-blue-500 text-blue-500" /> {driver?.rating || 'Nouveau'}</span>
                                   </div>
                                 </div>
                               </div>
@@ -327,64 +325,14 @@ export default function MissionDetailPage({ params }: { params: Promise<{ id: st
                         Payer la commission (10% du montant)
                       </Button>
                       <div className="text-sm text-[var(--text-secondary)] p-2">
-                        Commission : <span className="font-bold text-amber-600 dark:text-amber-400">{Math.round(acceptedQuote.price * 0.1).toLocaleString('fr-FR')} FCFA</span>
-                      </div>
+                       Commission : <span className="font-bold text-amber-600 dark:text-amber-400">{acceptedQuote ? Math.round(acceptedQuote.price * 0.1).toLocaleString('fr-FR') : '0'} FCFA</span>
+                     </div>
                     </div>
                     <p className="text-xs text-amber-600 dark:text-amber-400 mt-3">
                       Après paiement, le numéro du chauffeur sera dévoilé et vous pourrez le contacter directement.
                     </p>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {/* Rating Section (if delivered) */}
-            {mission.status === 'Livrée' && !existingRating && (
-              <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] shadow-sm p-6">
-                <h2 className="text-lg font-bold mb-4">Évaluer la prestation</h2>
-                <form onSubmit={handleSubmitRating} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Note (sur 5)</label>
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setRatingStars(star)}
-                          className={`p-1 ${star <= ratingStars ? 'text-blue-500' : 'text-slate-300 dark:text-slate-600'}`}
-                        >
-                          <Star className={`w-8 h-8 ${star <= ratingStars ? 'fill-current' : ''}`} />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Commentaire</label>
-                    <textarea 
-                      required
-                      className="flex w-full rounded-md border border-[var(--border-color)] bg-[var(--input-bg)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 min-h-[80px]"
-                      placeholder="Comment s'est passée la livraison ?"
-                      value={ratingComment}
-                      onChange={e => setRatingComment(e.target.value)}
-                    />
-                  </div>
-                  <Button type="submit">Envoyer l'évaluation</Button>
-                </form>
-              </div>
-            )}
-
-            {existingRating && (
-              <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] shadow-sm p-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                  <h2 className="text-lg font-bold">Évaluation envoyée</h2>
-                </div>
-                <div className="flex items-center gap-1 mb-2">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <Star key={star} className={`w-4 h-4 ${star <= existingRating.stars ? 'fill-blue-500 text-blue-500' : 'text-slate-300 dark:text-slate-600'}`} />
-                  ))}
-                </div>
-                <p className="text-[var(--text-secondary)] italic">"{existingRating.comment}"</p>
               </div>
             )}
           </div>
@@ -400,9 +348,6 @@ export default function MissionDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                   <div>
                     <p className="font-bold text-lg">{assignedDriver.name}</p>
-                    <div className="flex items-center gap-1 text-sm text-[var(--text-secondary)]">
-                      <Star className="w-4 h-4 fill-blue-500 text-blue-500" /> {assignedDriver.rating || 'Nouveau'}
-                    </div>
                   </div>
                 </div>
                 

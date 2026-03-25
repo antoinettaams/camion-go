@@ -124,7 +124,7 @@ export function DashboardOverview({ onNewRequest }: DashboardOverviewProps) {
             onAction={onNewRequest}
           />
         ) : (
-          <div className="space-y-3">
+          <div className="space-x-3">
             {myMissions.slice(0, 3).map(mission => (
               <MissionCard key={mission.id} mission={mission} />
             ))}

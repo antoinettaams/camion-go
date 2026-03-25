@@ -22,8 +22,14 @@ export interface User {
   createdAt?: string;     // ← AJOUTÉ
 }
 
-export type MissionStatus = 'En attente' | 'Devis reçus' | 'Confirmée' | 'En cours' | 'Livrée' | 'Annulée';
-
+export type MissionStatus = 
+  | 'En attente'
+  | 'Devis reçus'
+  | 'Confirmée'
+  | 'Payée'
+  | 'En cours'      // Ajoutez ce statut
+  | 'Livrée'
+  | 'Annulée';
 export interface Quote {
   id: string;
   missionId: string;

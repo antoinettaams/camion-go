@@ -122,27 +122,32 @@ export function DashboardOverview({ onViewAvailable }: DashboardOverviewProps) {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Carte de bienvenue */}
-      <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] shadow-sm p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">
+      <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div className="flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] break-words">
               Bonjour, {user.name}
             </h1>
-            <div className="flex items-center gap-2 mt-2 text-[var(--text-secondary)]">
-              <Badge variant="outline" className="bg-slate-50 dark:bg-slate-700/50">
+            <div className="flex flex-wrap items-center gap-2 mt-2 text-[var(--text-secondary)]">
+              <Badge variant="outline" className="bg-slate-50 dark:bg-slate-700/50 text-xs sm:text-sm">
                 {user.truckType}
               </Badge>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" /> {user.zone}
-              </span>
+              <span className="hidden sm:inline">•</span>
+              <div className="flex items-center gap-1 text-sm">
+                <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="truncate max-w-[150px] sm:max-w-none">{user.zone}</span>
+              </div>
             </div>
           </div>
-          <Button onClick={onViewAvailable} className="bg-blue-600 hover:bg-blue-700">
+          <Button 
+            onClick={onViewAvailable} 
+            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto text-sm sm:text-base"
+          >
             Voir les missions
           </Button>
         </div>
       </div>
+
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -232,7 +237,7 @@ interface MissionCardProps {
 function MissionCard({ mission }: MissionCardProps) {
   return (
     <Link href={`/dashboard/chauffeur/mission/${mission.id}`}>
-      <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-color)] p-4 hover:shadow-md transition-all">
+      <div className="bg-[var(--bg-secondary)] mb-4 rounded-xl border border-[var(--border-color)] p-4 hover:shadow-md transition-all">
         <div className="flex items-start justify-between">
           <div>
             <h3 className="font-semibold text-[var(--text-primary)]">{mission.merchandiseType}</h3>

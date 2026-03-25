@@ -283,26 +283,37 @@ function MissionCard({ mission, user, isZoneMatch }: MissionCardProps) {
         </div>
 
         {/* Date et action */}
-        <div className="flex flex-row lg:flex-col justify-between items-center lg:items-end gap-4 lg:gap-0 lg:border-l lg:border-[var(--border-color)] lg:pl-6">
-          <div className="lg:mb-4">
-            <p className="text-xs text-[var(--text-secondary)]">Date souhaitée</p>
-            <p className="font-semibold text-[var(--text-primary)] flex items-center gap-1">
-              <Calendar className="w-4 h-4 lg:hidden" />
-              {new Date(mission.desiredDate).toLocaleDateString('fr-FR')}
-            </p>
-          </div>
-          <Link href={`/dashboard/chauffeur/mission/${mission.id}`}>
-            <Button 
-              disabled={!isCompatible}
-              className="w-full gap-2"
-              title={!isCompatible ? `Votre camion ne peut transporter que ${user.capacity}T` : "Proposer un devis"}
-            >
-              Proposer un devis
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
-        </div>
+<div className="flex flex-row lg:flex-col justify-between items-center gap-3 sm:gap-4 
+                lg:items-end lg:gap-0 lg:border-l lg:border-[var(--border-color)] lg:pl-6 
+                pt-3 sm:pt-4 lg:pt-0 mt-3 sm:mt-4 lg:mt-0 border-t lg:border-t-0 border-[var(--border-color)]">
+  {/* Date */}
+  <div className="flex-1 lg:flex-none lg:mb-4">
+    <p className="text-[11px] sm:text-xs text-[var(--text-secondary)]">Date souhaitée</p>
+    <p className="font-semibold text-sm sm:text-base text-[var(--text-primary)] flex items-center gap-1">
+      <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:hidden flex-shrink-0" />
+      <span className="truncate">
+        {new Date(mission.desiredDate).toLocaleDateString('fr-FR', {
+          day: 'numeric',
+          month: 'short'
+        })}
+      </span>
+    </p>
+  </div>
+  
+  {/* Bouton */}
+  <Link href={`/dashboard/chauffeur/mission/${mission.id}`} className="w-full lg:w-auto">
+    <Button 
+      disabled={!isCompatible}
+      size="sm"
+      className="w-full gap-1.5 sm:gap-2 text-sm sm:text-base py-1.5 sm:py-2"
+      title={!isCompatible ? `Votre camion ne peut transporter que ${user.capacity}T` : "Proposer un devis"}
+    >
+      Proposer un devis
+      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+    </Button>
+  </Link>
+</div>
       </div>
     </div>
-  );
+  ); 
 }
